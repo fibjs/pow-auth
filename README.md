@@ -1,4 +1,4 @@
-# Hash Auth
+# Pow Auth
 
 A proof-of-work based authentication module using Web Crypto API.
 
