@@ -1,0 +1,29 @@
+{
+  "name": "pow-auth",
+  "version": "1.0.0",
+  "description": "Hashcash-based authentication module using Web Crypto API",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fibjs/pow-auth.git"
+  },
+  "keywords": [
+    "hashcash",
+    "proof-of-work",
+    "authentication",
+    "webcrypto",
+    "security"
+  ],
+  "author": "lion@9465.net",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "lru-cache": "^10.0.1"
+  }
+}
