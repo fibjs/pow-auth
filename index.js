@@ -1,6 +1,27 @@
 // Hash-based authentication module using Web Crypto API
 import { LRUCache } from 'lru-cache';
+import { sha256 } from 'hash-wasm';
 const encoder = new TextEncoder();
+
+// Create a crypto fallback object when WebCrypto is not available
+const cryptoFallback = {
+    subtle: {
+        digest: async (algorithm, data) => {
+            if (algorithm !== 'SHA-256') {
+                throw new Error('Only SHA-256 is supported');
+            }
+            const hashHex = await sha256(new Uint8Array(data));
+            const matches = hashHex.match(/.{1,2}/g);
+            if (!matches) {
+                throw new Error('Invalid hash format');
+            }
+            const hashBytes = new Uint8Array(matches.map(byte => parseInt(byte, 16)));
+            return hashBytes.buffer;
+        }
+    }
+};
+
+const cryptoAPI = typeof crypto !== 'undefined' && crypto.subtle ? crypto : cryptoFallback;
 
 /**
  * @typedef {Object} HashAuthConfig
@@ -57,7 +78,7 @@ export class PowAuth {
         }
 
         const data = encoder.encode(`${name}:${password}`);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashBuffer = await cryptoAPI.subtle.digest('SHA-256', data);
         return Array.from(new Uint8Array(hashBuffer))
             .map(b => b.toString(16).padStart(2, '0'))
             .join('');
@@ -79,7 +100,7 @@ export class PowAuth {
         
         while (true) {
             const data = encoder.encode(`${key}:${ts}:${nonce}`);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashBuffer = await cryptoAPI.subtle.digest('SHA-256', data);
             const hash = Array.from(new Uint8Array(hashBuffer))
                 .map(b => b.toString(16).padStart(2, '0'))
                 .join('');
@@ -141,7 +162,7 @@ export class PowAuth {
 
         // Then verify the proof hash
         const data = encoder.encode(proofKey);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashBuffer = await cryptoAPI.subtle.digest('SHA-256', data);
         const calculatedHash = Array.from(new Uint8Array(hashBuffer))
             .map(b => b.toString(16).padStart(2, '0'))
             .join('');
